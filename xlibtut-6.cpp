@@ -70,11 +70,12 @@ main(int argc, char** args)
   }
 
   XSetWindowAttributes windowAttr;
+  windowAttr.bit_gravity = StaticGravity;
   windowAttr.background_pixel = 0;
   windowAttr.colormap = XCreateColormap(display, root, 
 					 visinfo.visual, AllocNone);
   windowAttr.event_mask = StructureNotifyMask; 
-  unsigned long attributeMask = CWBackPixel | CWColormap | CWEventMask;
+  unsigned long attributeMask = CWBitGravity | CWBackPixel | CWColormap | CWEventMask;
 
   Window window = XCreateWindow(display, root, 
 				0, 0,
@@ -102,11 +103,7 @@ main(int argc, char** args)
 
   XImage* xWindowBuffer = XCreateImage(display, visinfo.visual, visinfo.depth,
 				       ZPixmap, 0, mem, width, height,
-				       pixelBits, 0);
-  Pixmap windowPixmap = XCreatePixmap(display, window,
-				      (unsigned int)width, (unsigned int)height,
-				      visinfo.depth);
-  
+				       pixelBits, 0);  
   GC defaultGC = DefaultGC(display, defaultScreen);
   
   int sizeChange = 0;  
@@ -145,10 +142,6 @@ main(int argc, char** args)
 	  xWindowBuffer = XCreateImage(display, visinfo.visual, visinfo.depth,
 				       ZPixmap, 0, mem, width, height,
 				       pixelBits, 0);
-	  XFreePixmap(display, windowPixmap); 
-	  windowPixmap = XCreatePixmap(display, window,
-				       (unsigned int)width, (unsigned int)height,
-				       visinfo.depth);
 	}
 
       int pitch = width*pixelBytes;
@@ -172,12 +165,6 @@ main(int argc, char** args)
       XPutImage(display, window,
 		defaultGC, xWindowBuffer, 0, 0, 0, 0, 
 		width, height);
-      XPutImage(display, windowPixmap, 
-		defaultGC, xWindowBuffer, 0, 0, 0, 0, 
-		width, height);
-      XSetWindowBackgroundPixmap(display, window, windowPixmap);
-      
-      XFlush(display);      
     };
 
   return 0;
