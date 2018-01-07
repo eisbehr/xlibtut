@@ -74,7 +74,7 @@ main(int argc, char** args)
     windowAttr.background_pixel = 0;
     windowAttr.colormap = XCreateColormap(display, root, 
                                           visinfo.visual, AllocNone);
-    windowAttr.event_mask = StructureNotifyMask | KeyPressMask | KeyReleaseMask; 
+    windowAttr.event_mask = StructureNotifyMask; 
     unsigned long attributeMask = CWBitGravity | CWBackPixel | CWColormap | CWEventMask;
     
     Window window = XCreateWindow(display, root, 
@@ -91,44 +91,6 @@ main(int argc, char** args)
     XStoreName(display, window, "Hello, World!");
     setSizeHint(display, window, 400, 300, 0, 0); 
     
-    XIM xInputMethod = XOpenIM(display, 0, 0, 0);
-    if(!xInputMethod)
-    {
-        printf("Input Method could not be opened\n");
-    }
-    
-    XIMStyles* styles = 0;
-    if(XGetIMValues(xInputMethod, XNQueryInputStyle, &styles, NULL) || !styles)
-    {
-        printf("Input Styles could not be retrieved\n");
-    }
-    
-    XIMStyle bestMatchStyle = 0;
-    for(int i=0; i<styles->count_styles; i++)
-    {
-        XIMStyle thisStyle = styles->supported_styles[i];
-        if (thisStyle == (XIMPreeditNothing | XIMStatusNothing))
-        {
-            bestMatchStyle = thisStyle;
-            break;
-        }
-    }
-    XFree(styles);
-    
-    if(!bestMatchStyle)
-    {
-        printf("No matching input style could be determined\n");
-    }
-    
-    XIC xInputContext = XCreateIC(xInputMethod, XNInputStyle, bestMatchStyle,
-                                  XNClientWindow, window,
-                                  XNFocusWindow, window,
-                                  NULL);
-    if(!xInputContext)
-    {
-        printf("Input Context could not be created\n");
-    }
-    
     XMapWindow(display, window);
     
     //toggleMaximize(display, window);
@@ -141,7 +103,7 @@ main(int argc, char** args)
     
     XImage* xWindowBuffer = XCreateImage(display, visinfo.visual, visinfo.depth,
                                          ZPixmap, 0, mem, width, height,
-                                         pixelBits, 0);
+                                         pixelBits, 0);  
     GC defaultGC = DefaultGC(display, defaultScreen);
     
     Atom WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
@@ -180,38 +142,6 @@ main(int argc, char** args)
                     width = e->width;
                     height = e->height;
                     sizeChange = 1;
-                } break;
-                case KeyPress: {
-                    XKeyPressedEvent* e = (XKeyPressedEvent*) &ev;
-                    
-                    int symbol = 0;
-                    Status status = 0;
-                    Xutf8LookupString(xInputContext, e, (char*)&symbol,
-                                      4, 0, &status);
-                    
-                    if(status == XBufferOverflow)
-                    {
-                        // Should not happen since there are no utf-8 characters larger than 24bits
-                        // But something to be aware of when used to directly write to a string buffer
-                        printf("Buffer overflow when trying to create keyboard symbol map\n");
-                    }
-                    else if(status == XLookupChars)
-                    {
-                        printf("%s\n", (char*)&symbol);
-                    }
-                    
-                    if(e->keycode == XKeysymToKeycode(display, XK_Left)) printf("left arrow pressed\n");
-                    if(e->keycode == XKeysymToKeycode(display, XK_Right)) printf("right arrow pressed\n");
-                    if(e->keycode == XKeysymToKeycode(display, XK_Up)) printf("up arrow pressed\n");
-                    if(e->keycode == XKeysymToKeycode(display, XK_Down)) printf("down arrow pressed\n");
-                } break;
-                case KeyRelease: {
-                    XKeyPressedEvent* e = (XKeyPressedEvent*) &ev;
-                    
-                    if(e->keycode == XKeysymToKeycode(display, XK_Left)) printf("left arrow released\n");
-                    if(e->keycode == XKeysymToKeycode(display, XK_Right)) printf("right arrow released\n");
-                    if(e->keycode == XKeysymToKeycode(display, XK_Up)) printf("up arrow released\n");
-                    if(e->keycode == XKeysymToKeycode(display, XK_Down)) printf("down arrow released\n");
                 } break;
             }
         }
